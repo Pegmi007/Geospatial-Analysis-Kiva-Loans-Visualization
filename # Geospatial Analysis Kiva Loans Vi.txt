@@ -1,0 +1,239 @@
+# Geospatial Analysis: Kiva Loans Visualization
+
+## Table des matières
+- [Introduction](#introduction)
+- [Question 2: Visualisation mondiale des prêts](#question-2-visualisation-mondiale-des-prêts)
+- [Question 3: Sélection des prêts aux Philippines](#question-3-sélection-des-prêts-aux-philippines)
+- [Question 4: Analyse détaillée des Philippines](#question-4-analyse-détaillée-des-philippines)
+- [Installation](#installation)
+- [Utilisation](#utilisation)
+
+---
+
+## Introduction
+
+Ce projet présente une analyse géospatiale des prêts Kiva à travers le monde, avec un focus particulier sur les Philippines. Nous utilisons GeoPandas pour manipuler et visualiser des données géographiques.
+
+---
+
+## Question 2: Visualisation mondiale des prêts
+
+### Objectif
+Visualiser les emplacements des prêts Kiva à travers le monde en utilisant les GeoDataFrames `world` et `world_loans`.
+
+### Code de chargement des données
+
+```python
+# Charger les frontières des pays
+world_filepath = gpd.datasets.get_path('naturalearth_lowres')
+world = gpd.read_file(world_filepath)
+world.head()
+```
+
+### Solution
+
+```python
+# Visualisation mondiale des prêts Kiva
+ax = world.plot(figsize=(20,10), color='whitesmoke', edgecolor='black')
+world_loans.plot(ax=ax, markersize=2)
+```
+
+### Explication
+
+#### 1. Création de la carte de base (`world.plot()`)
+- **`figsize=(20,10)`**: Définit une grande taille pour bien voir les détails mondiaux
+- **`color='whitesmoke'`**: Colore les pays en gris très clair pour qu'ils soient visibles sans dominer
+- **`edgecolor='black'`**: Ajoute des bordures noires pour distinguer clairement les frontières
+
+#### 2. Superposition des prêts (`world_loans.plot(ax=ax)`)
+- **`ax=ax`**: **Crucial!** Cela superpose les points de prêts sur la même figure que la carte mondiale
+- **`markersize=2`**: Utilise de petits points pour éviter que les marqueurs se chevauchent trop
+
+#### Principes clés
+- **L'ordre compte**: On trace d'abord la carte de base (`world`), puis on superpose les données ponctuelles (`world_loans`)
+- **Partage des axes**: Le paramètre `ax=ax` permet de dessiner les deux GeoDataFrames sur le même graphique
+- **Lisibilité**: Les couleurs neutres pour le fond permettent aux points de données de ressortir
+
+### Résultat
+Cette visualisation permet de voir immédiatement la distribution géographique des prêts Kiva et d'identifier les régions où l'activité de microcrédit est la plus concentrée.
+
+---
+
+## Question 3: Sélection des prêts aux Philippines
+
+### Objectif
+Créer un GeoDataFrame `PHL_loans` contenant uniquement les prêts basés aux Philippines.
+
+### Solution
+
+```python
+# Filtrer les prêts aux Philippines
+PHL_loans = world_loans[world_loans['country'] == 'Philippines']
+
+# Vérifier la réponse
+q_3.check()
+```
+
+### Explication
+
+#### Filtrage conditionnel de GeoDataFrame
+- **`world_loans['country'] == 'Philippines'`**: Crée un masque booléen qui est `True` pour toutes les lignes où la colonne 'country' contient 'Philippines'
+- **`world_loans[...]`**: Applique ce masque pour ne conserver que les lignes correspondantes
+
+#### Syntaxe pandas/GeoPandas standard
+- Les GeoDataFrames héritent des fonctionnalités de pandas DataFrames
+- Le filtrage par condition booléenne est la méthode standard pour sélectionner des sous-ensembles de données
+
+### Alternatives possibles
+
+```python
+# Alternative 1: Utiliser query()
+PHL_loans = world_loans.query("country == 'Philippines'")
+
+# Alternative 2: Utiliser loc[]
+PHL_loans = world_loans.loc[world_loans['country'] == 'Philippines']
+```
+
+### Points importants
+- ✅ **Respect de la casse**: 'Philippines' avec majuscule (pas 'philippines')
+- ✅ **Opérateur de comparaison**: `==` (égalité), pas `=` (assignation)
+- ✅ **Résultat**: `PHL_loans` est un nouveau GeoDataFrame contenant uniquement les prêts philippins, avec toutes les colonnes et la géométrie préservées
+
+### Usage
+Cette sélection permet ensuite de faire des analyses ou visualisations spécifiques aux Philippines, en isolant ce sous-ensemble géographique du dataset global.
+
+---
+
+## Question 4: Analyse détaillée des Philippines
+
+### Objectif
+Visualiser les prêts Kiva spécifiquement aux Philippines en utilisant les frontières détaillées des îles.
+
+### Code de chargement des données
+
+```python
+# Charger les frontières des îles philippines depuis un fichier KML
+gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
+PHL = gpd.read_file("../input/geospatial-learn-course-data/Philippines_AL258.kml", driver='KML')
+PHL.head()
+```
+
+### Solution
+
+```python
+# Visualisation des prêts aux Philippines
+ax = PHL.plot(figsize=(12,12), color='whitesmoke', edgecolor='gray')
+PHL_loans.plot(ax=ax, markersize=2, color='red')
+```
+
+### Explication
+
+#### 1. Création de la carte de base des Philippines (`PHL.plot()`)
+- **`figsize=(12,12)`**: Taille carrée adaptée pour visualiser l'archipel philippin
+- **`color='whitesmoke'`**: Fond clair pour les îles, permettant de bien voir les contours
+- **`edgecolor='gray'`**: Bordures grises pour délimiter clairement chaque île
+
+#### 2. Superposition des points de prêts (`PHL_loans.plot(ax=ax)`)
+- **`ax=ax`**: **Crucial** - superpose les prêts sur la même carte que les îles
+- **`markersize=2`**: Petits marqueurs pour éviter le chevauchement
+- **`color='red'`**: Couleur distinctive pour faire ressortir les emplacements des prêts
+
+### Principes clés
+
+1. **Contexte géographique**: La carte `PHL` fournit le contexte (les îles) sur lequel se placent les prêts
+
+2. **Superposition**: Sans `ax=ax`, les deux graphiques seraient séparés au lieu d'être superposés
+
+3. **Contraste visuel**: 
+   - Fond clair (whitesmoke) + points colorés (red) = bonne lisibilité
+   - Les bordures grises aident à distinguer les îles sans dominer visuellement
+
+### Insights
+
+Cette carte permet de:
+- ✅ Identifier quelles îles/régions des Philippines reçoivent le plus de prêts Kiva
+- ✅ Voir si les prêts sont concentrés dans les zones urbaines ou dispersés
+- ✅ Comprendre la distribution géographique de l'activité de microcrédit dans l'archipel
+
+### Variantes acceptables
+
+```python
+# Avec d'autres couleurs et transparence
+ax = PHL.plot(figsize=(12,12), color='lightblue', edgecolor='black')
+PHL_loans.plot(ax=ax, markersize=3, color='darkred', alpha=0.5)
+```
+
+**💡 L'essentiel est de superposer correctement les deux GeoDataFrames avec `ax=ax` !**
+
+---
+
+## Installation
+
+### Prérequis
+
+```bash
+pip install geopandas
+pip install matplotlib
+pip install fiona
+```
+
+### Dépendances
+
+```python
+import geopandas as gpd
+import matplotlib.pyplot as plt
+```
+
+---
+
+## Utilisation
+
+### 1. Cloner le repository
+
+```bash
+git clone https://github.com/votre-username/kiva-loans-geospatial.git
+cd kiva-loans-geospatial
+```
+
+### 2. Exécuter le notebook
+
+```bash
+jupyter notebook kiva_loans_analysis.ipynb
+```
+
+### 3. Structure du projet
+
+```
+kiva-loans-geospatial/
+│
+├── README.md
+├── requirements.txt
+├── kiva_loans_analysis.ipynb
+├── data/
+│   └── Philippines_AL258.kml
+└── images/
+    ├── world_loans_map.png
+    └── philippines_loans_map.png
+```
+
+---
+
+## Contributeurs
+
+- Votre Nom (@votre-username)
+
+## Licence
+
+Ce projet est sous licence MIT.
+
+---
+
+## Ressources supplémentaires
+
+- [Documentation GeoPandas](https://geopandas.org/)
+- [Kiva.org](https://www.kiva.org/)
+- [Natural Earth Data](https://www.naturalearthdata.com/)
+
+---
+
+**Note**: Ce projet fait partie d'un cours d'apprentissage sur l'analyse géospatiale avec Python.
